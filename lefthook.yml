@@ -1,0 +1,7 @@
+pre-commit:
+  parallel: true
+  commands:
+    standardrb:
+      glob: "*.{rb,rake,gemspec}"
+      run: bundle exec standardrb --fix {staged_files}
+      stage_fixed: true
