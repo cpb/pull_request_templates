@@ -12,6 +12,20 @@ PullRequestTemplates helps teams by:
 
 Works seamlessly both in local development and GitHub Actions workflows.
 
+## Installation
+
+Install the gem and add to the application's Gemfile by executing:
+
+```bash
+bundle add pull_request_templates
+```
+
+If bundler is not being used to manage dependencies, install the gem by executing:
+
+```bash
+gem install pull_request_templates
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
