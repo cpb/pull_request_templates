@@ -7,34 +7,41 @@ module PullRequestTemplates
 
     desc "pr-url", "Generate a pull request URL based on changes"
     def pr_url
-      # Check if templates are configured
-      if Dir.exist?(".github/PULL_REQUEST_TEMPLATE")
-        # Check if we're on the default branch
-        current_branch = `git rev-parse --abbrev-ref HEAD`.strip
+      # Find all available templates
+      templates = get_available_templates
 
-        if current_branch == "main"
-          raise Thor::Error, "Cannot generate PR URL while on default branch"
-        end
-
-        # Check if there are any changes to detect
-        changes = get_changes
-
-        if changes.empty?
-          raise Thor::Error, "No changes detected"
-        end
-
-        # Find the appropriate template
-        template = select_template(changes)
-
-        # Generate the pull request URL
-        url = generate_pr_url(current_branch, template)
-        say url
-      else
+      if templates.empty?
         raise Thor::Error, "No templates found"
       end
+
+      # Check if we're on the default branch
+      current_branch = `git rev-parse --abbrev-ref HEAD`.strip
+
+      if current_branch == "main"
+        raise Thor::Error, "Cannot generate PR URL while on default branch"
+      end
+
+      # Check if there are any changes to detect
+      changes = get_changes
+
+      if changes.empty?
+        raise Thor::Error, "No changes detected"
+      end
+
+      # Select appropriate template
+      template = select_template(templates, changes)
+
+      # Generate the pull request URL
+      url = generate_pr_url(current_branch, template)
+      say url
     end
 
     private
+
+    def get_available_templates
+      template_dir = ".github/PULL_REQUEST_TEMPLATE"
+      Dir.glob("#{template_dir}/*.md").map { |path| File.basename(path) }
+    end
 
     def get_changes
       # Get changes between current branch and main branch
@@ -43,9 +50,14 @@ module PullRequestTemplates
       changes.split("\n").reject(&:empty?)
     end
 
-    def select_template(changes)
-      # For simplicity, just use the feature template for now
-      # In a more advanced implementation, we could analyze the changes
+    def select_template(templates, changes)
+      # If there's only one template, use it
+      if templates.length == 1
+        return templates.first
+      end
+
+      # Otherwise, for now just use the first template
+      # In a more advanced implementation, we would analyze the changes
       # and select the most appropriate template
       "feature.md"
     end

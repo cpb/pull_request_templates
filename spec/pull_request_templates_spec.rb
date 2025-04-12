@@ -121,6 +121,63 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
+    context "when a single template is available" do
+      before do
+        # Set up a git repository
+        setup_aruba
+
+        # Initialize git repo
+        run_command_and_stop "git init"
+        run_command_and_stop "git config user.email 'test@example.com'"
+        run_command_and_stop "git config user.name 'Test User'"
+
+        # Configure origin remote
+        run_command_and_stop "git remote add origin https://github.com/user/repo.git"
+
+        # Create initial commit to establish main branch
+        write_file ".gitkeep", ""
+        run_command_and_stop "git add .gitkeep"
+        run_command_and_stop "git commit -m 'Initial commit'"
+
+        # Create GitHub pull request template directory
+        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
+
+        # Add a bug_fix template (different from the hardcoded "feature.md")
+        write_file ".github/PULL_REQUEST_TEMPLATE/bug_fix.md", <<~MD
+          # Bug Fix
+          
+          ## Description
+          Describe the bug you're fixing
+          
+          ## Steps to Reproduce
+          Steps to reproduce the behavior
+        MD
+
+        # Add files to git
+        run_command_and_stop "git add .github"
+        run_command_and_stop "git commit -m 'Add PR templates'"
+
+        # Create a feature branch with changes
+        run_command_and_stop "git checkout -b bug-fix-branch"
+
+        # Make a change
+        write_file "fix.txt", "This is a bug fix"
+        run_command_and_stop "git add fix.txt"
+        run_command_and_stop "git commit -m 'Add fix'"
+      end
+
+      it "selects the only available template" do
+        # Run the command
+        run_command_and_stop "pull_request_templates pr-url"
+
+        # Verify it outputs a valid GitHub PR URL with the bug_fix template
+        expect(last_command_started).to have_output(%r{https://github.com/user/repo/pull/new/bug-fix-branch\?template=bug_fix.md})
+
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
+      end
+    end
+
     context "when all conditions are met for generating a PR URL" do
       before do
         # Set up a git repository
