@@ -16,7 +16,7 @@ module PullRequestTemplates
           raise Thor::Error, "Cannot generate PR URL while on default branch"
         end
       else
-        say "No templates found"
+        raise Thor::Error, "No templates found"
       end
     end
   end

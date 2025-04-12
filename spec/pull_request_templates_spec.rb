@@ -14,13 +14,13 @@ RSpec.describe PullRequestTemplates, type: :aruba do
 
       it "outputs a message about no templates and exits successfully" do
         # Run the command
-        run_command_and_stop "pull_request_templates pr-url"
+        run_command "pull_request_templates pr-url"
 
         # Only verify it mentions no templates
         expect(last_command_started).to have_output(/No templates found/)
 
         # Check it has the expected exit status
-        expect(last_command_started).to have_exit_status(0)
+        expect(last_command_started).to have_exit_status(1)
       end
     end
 
