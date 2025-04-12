@@ -29,8 +29,9 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Set up a git repository
         setup_aruba
 
-        # Initialize git repo
+        # Initialize git repo and ensure main branch
         run_command_and_stop "git init"
+        run_command_and_stop "git branch -m main"  # Rename default branch to main
         run_command_and_stop "git config user.email 'test@example.com'"
         run_command_and_stop "git config user.name 'Test User'"
 
@@ -76,8 +77,9 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Set up a git repository
         setup_aruba
 
-        # Initialize git repo
+        # Initialize git repo and ensure main branch
         run_command_and_stop "git init"
+        run_command_and_stop "git branch -m main"  # Rename default branch to main
         run_command_and_stop "git config user.email 'test@example.com'"
         run_command_and_stop "git config user.name 'Test User'"
 
@@ -126,8 +128,9 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Set up a git repository
         setup_aruba
 
-        # Initialize git repo
+        # Initialize git repo and ensure main branch
         run_command_and_stop "git init"
+        run_command_and_stop "git branch -m main"  # Rename default branch to main
         run_command_and_stop "git config user.email 'test@example.com'"
         run_command_and_stop "git config user.name 'Test User'"
 
@@ -185,8 +188,9 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Set up a git repository
         setup_aruba
 
-        # Initialize git repo
+        # Initialize git repo and ensure main branch
         run_command_and_stop "git init"
+        run_command_and_stop "git branch -m main"  # Rename default branch to main
         run_command_and_stop "git config user.email 'test@example.com'"
         run_command_and_stop "git config user.name 'Test User'"
 
