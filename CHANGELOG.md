@@ -1,6 +1,6 @@
 ## [Unreleased]
 
-## [0.2.0] - 2023-06-09
+## [0.2.0] - 2025-04-11
 
 - Added error handling for edge cases:
     - No templates found
@@ -12,6 +12,6 @@
     - Clearer error messages
 - Established foundation for template matching logic with initial API
 
-## [0.1.0] - 2023-04-11
+## [0.1.0] - 2025-04-11
 
 - Initial release
