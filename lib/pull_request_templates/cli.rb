@@ -61,20 +61,8 @@ module PullRequestTemplates
       # Get the repository URL from git config
       remote_url = `git config --get remote.origin.url`.strip
 
-      # Clean up the URL to get the GitHub repository path
-      # Handle both HTTPS and SSH formats
-      repo_path = if remote_url.include?("github.com")
-        if remote_url.start_with?("git@")
-          # SSH format: git@github.com:user/repo.git
-          remote_url.sub(/^git@github\.com:/, "").sub(/\.git$/, "")
-        else
-          # HTTPS format: https://github.com/user/repo.git
-          remote_url.sub(/^https:\/\/github\.com\//, "").sub(/\.git$/, "")
-        end
-      else
-        # Default to the remote URL without .git
-        remote_url.sub(/\.git$/, "")
-      end
+      # Extract repository path from SSH URL format (git@github.com:user/repo.git)
+      repo_path = remote_url.sub(/^git@github\.com:/, "").sub(/\.git$/, "")
 
       # Generate GitHub pull request URL with template parameter
       "https://github.com/#{repo_path}/compare/#{branch}?expand=1&quick_pull=1&template=#{template}"
