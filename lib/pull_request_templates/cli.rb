@@ -53,13 +53,8 @@ module PullRequestTemplates
     def select_template(templates, changes)
       # If there's only one template, use it
       if templates.length == 1
-        return templates.first
+        templates.first
       end
-
-      # Otherwise, for now just use the first template
-      # In a more advanced implementation, we would analyze the changes
-      # and select the most appropriate template
-      "feature.md"
     end
 
     def generate_pr_url(branch, template)
@@ -82,7 +77,7 @@ module PullRequestTemplates
       end
 
       # Generate GitHub pull request URL with template parameter
-      "https://github.com/#{repo_path}/pull/new/#{branch}?template=#{template}"
+      "https://github.com/#{repo_path}/compare/#{branch}?expand=1&quick_pull=1&template=#{template}"
     end
   end
 end

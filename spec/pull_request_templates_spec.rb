@@ -45,10 +45,10 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
-          
+
           ## Description
           Describe the feature you're adding
-          
+
           ## Checklist
           - [ ] Tests added
           - [ ] Documentation updated
@@ -92,10 +92,10 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
-          
+
           ## Description
           Describe the feature you're adding
-          
+
           ## Checklist
           - [ ] Tests added
           - [ ] Documentation updated
@@ -145,10 +145,10 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Add a bug_fix template (different from the hardcoded "feature.md")
         write_file ".github/PULL_REQUEST_TEMPLATE/bug_fix.md", <<~MD
           # Bug Fix
-          
+
           ## Description
           Describe the bug you're fixing
-          
+
           ## Steps to Reproduce
           Steps to reproduce the behavior
         MD
@@ -171,7 +171,9 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "pull_request_templates pr-url"
 
         # Verify it outputs a valid GitHub PR URL with the bug_fix template
-        expect(last_command_started).to have_output(%r{https://github.com/user/repo/pull/new/bug-fix-branch\?template=bug_fix.md})
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/bug-fix-branch\?expand=1&quick_pull=1&template=bug_fix.md}
+        )
 
         # Check it has a successful exit status
         expect(last_command_started).to have_exit_status(0)
@@ -202,10 +204,10 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
-          
+
           ## Description
           Describe the feature you're adding
-          
+
           ## Checklist
           - [ ] Tests added
           - [ ] Documentation updated
@@ -229,7 +231,9 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "pull_request_templates pr-url"
 
         # Verify it outputs a valid GitHub PR URL with template parameter
-        expect(last_command_started).to have_output(%r{https://github.com/user/repo/pull/new/feature-branch\?template=feature.md})
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=feature.md}
+        )
 
         # Check it has a successful exit status
         expect(last_command_started).to have_exit_status(0)
