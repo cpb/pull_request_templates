@@ -26,6 +26,35 @@ If bundler is not being used to manage dependencies, install the gem by executin
 gem install pull_request_templates
 ```
 
+## Usage
+
+> **Note:** This is pre-release software. Currently, it only works with a single template in the pull request template directory.
+
+### Setting Up Templates
+
+Place your PR templates in the `.github/PULL_REQUEST_TEMPLATE/` directory:
+
+```
+.github/
+└── PULL_REQUEST_TEMPLATE/
+    └── template.md
+```
+
+### Creating a Pull Request
+
+When you're ready to create a pull request:
+
+```bash
+pull_request_templates pr-url
+```
+
+This command:
+- Selects an appropriate template based on your changes
+- Generates a GitHub PR URL with the template parameter
+- Outputs the URL to your terminal
+
+Open the URL in your browser to create a pull request with the template pre-applied.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
