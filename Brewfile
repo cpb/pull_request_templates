@@ -5,4 +5,4 @@ brew "coreutils"
 brew "act"
 
 # Required for act to run GitHub Actions locally
-cask "docker" 
+cask "docker"
