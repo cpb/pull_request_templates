@@ -1,5 +1,3 @@
-## [Unreleased]
-
 ## [0.2.0] - 2025-04-11
 
 - Added error handling for edge cases:
