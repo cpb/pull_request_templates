@@ -3,6 +3,15 @@ set -euo pipefail
 IFS=$'\n\t'
 set -vx
 
+# Install Homebrew dependencies if available
+if command -v brew >/dev/null 2>&1; then
+  brew bundle install
+else
+  echo "Homebrew not found. Skipping Homebrew dependencies."
+  echo "To install Homebrew dependencies manually, install Homebrew and run: brew bundle install"
+fi
+
+# Install Ruby dependencies
 bundle install
 
 # Do any other automated setup that you need to do here
