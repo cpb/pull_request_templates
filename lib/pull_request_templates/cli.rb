@@ -53,8 +53,14 @@ module PullRequestTemplates
     def select_template(templates, changes)
       # If there's only one template, use it
       if templates.length == 1
-        templates.first
+        return templates.first
       end
+
+      raise AmbiguousTemplateSelection, <<~MESSAGE
+        Unable to pick one template from #{templates} for the changes to #{changes.count} files:
+
+        * #{changes.join("\n*")}
+      MESSAGE
     end
 
     def generate_pr_url(branch, template)
