@@ -9,6 +9,7 @@ group :development, :test do
   gem "aruba", "~> 2.3"
   gem "lefthook", "~> 1.11"
   gem "rake", "~> 13.2"
+  gem "rdbg"
   gem "rspec", "~> 3.13"
   gem "standard", "~> 1.49"
 end
