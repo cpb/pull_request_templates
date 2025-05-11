@@ -228,6 +228,14 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           Steps to reproduce the behavior
         MD
 
+        # Add a routing file with MECE path patterns using globs
+        write_file ".github/PULL_REQUEST_TEMPLATE/.routing.yml", <<~YML
+          feature.md:
+            - feature*.txt
+          bug_fix.md:
+            - fix*.txt
+        YML
+
         # Add files to git
         run_command_and_stop "git add .github"
         run_command_and_stop "git commit -m 'Add PR templates'"
