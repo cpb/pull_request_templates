@@ -1,4 +1,6 @@
 require "thor"
+require "yaml"
+require "pathname"
 
 module PullRequestTemplates
   class Cli < Thor
@@ -51,6 +53,29 @@ module PullRequestTemplates
     end
 
     def select_template(templates, changes)
+      routing_file = ".github/PULL_REQUEST_TEMPLATE/.routing.yml"
+      if File.exist?(routing_file)
+        routing = YAML.load_file(routing_file)
+        matches = Hash.new { |h, k| h[k] = [] }
+        changes.each do |file|
+          routing.each do |template, patterns|
+            Array(patterns).each do |pattern|
+              # Use File.fnmatch for glob matching
+              matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB)
+            end
+          end
+        end
+        # Only consider templates that matched all changed files
+        selected = matches.select { |_, files| files.sort == changes.sort }
+        if selected.size == 1
+          return selected.keys.first
+        elsif selected.size > 1
+          raise AmbiguousTemplateSelection, <<~MESSAGE
+            Unable to pick one template from #{selected.keys} for the changes to #{changes.count} files:
+            * #{changes.join("\n* ")}
+          MESSAGE
+        end
+      end
       # If there's only one template, use it
       if templates.length == 1
         return templates.first
