@@ -183,7 +183,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when multiple templates are available" do
+    context "when multiple templates could describe the change" do
       before do
         # Set up a git repository
         setup_aruba
@@ -235,18 +235,26 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Create a feature branch with changes
         run_command_and_stop "git checkout -b bug-fix-branch"
 
-        # Make a change
+        # Match a feature contribution
+        write_file "feature.txt", "This is a feature contribution"
+        run_command_and_stop "git add feature.txt"
+        run_command_and_stop "git commit -m 'Add feature'"
+
+        # Match a fix contribution
         write_file "fix.txt", "This is a bug fix"
         run_command_and_stop "git add fix.txt"
         run_command_and_stop "git commit -m 'Add fix'"
       end
 
-      it "outputs a message about too much templates" do
+      it "fails, and lists the matched templates and files they have in common" do
         # Run the command
         run_command "pull_request_templates pr-url"
 
         # Verify it cannot chose a single template
-        expect(last_command_started).to have_output(/Unable to pick one template from \["bug_fix\.md", "feature\.md"] for the changes to 1 files:/)
+        expect(last_command_started)
+          .to have_output(/Unable to pick one template from \["bug_fix\.md", "feature\.md"] for the changes to 2 files:/)
+          .and have_output(/\* fix\.txt/)
+          .and have_output(/\* feature\.txt/)
 
         # Check it has a non-zero exit status
         expect(last_command_started).to have_exit_status(1)
