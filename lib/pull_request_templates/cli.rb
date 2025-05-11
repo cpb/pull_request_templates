@@ -54,36 +54,26 @@ module PullRequestTemplates
 
     def select_template(templates, changes)
       routing_file = ".github/PULL_REQUEST_TEMPLATE/.routing.yml"
+      candidates = []
       if File.exist?(routing_file)
         routing = YAML.load_file(routing_file)
         matches = Hash.new { |h, k| h[k] = [] }
         changes.each do |file|
           routing.each do |template, patterns|
             Array(patterns).each do |pattern|
-              # Use File.fnmatch for glob matching
               matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB)
             end
           end
         end
-        # Only consider templates that matched all changed files
         selected = matches.select { |_, files| files.sort == changes.sort }
-        if selected.size == 1
-          return selected.keys.first
-        elsif selected.size > 1
-          raise AmbiguousTemplateSelection, <<~MESSAGE
-            Unable to pick one template from #{selected.keys} for the changes to #{changes.count} files:
-            * #{changes.join("\n* ")}
-          MESSAGE
-        end
+        candidates = selected.keys if selected.any?
       end
-      # If there's only one template, use it
-      if templates.length == 1
-        return templates.first
+      candidates = templates if candidates.empty?
+      if candidates.length == 1
+        return candidates.first
       end
-
       raise AmbiguousTemplateSelection, <<~MESSAGE
-        Unable to pick one template from #{templates} for the changes to #{changes.count} files:
-
+        Unable to pick one template from #{candidates} for the changes to #{changes.count} files:
         * #{changes.join("\n* ")}
       MESSAGE
     end
