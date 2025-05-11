@@ -334,15 +334,14 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       it "fails, and lists the matched templates and files they have in common" do
         # Run the command
         run_command "pull_request_templates pr-url"
-
-        # Verify it cannot chose a single template
-        expect(last_command_started)
-          .to have_output(/Unable to pick one template from \["bug_fix\.md", "feature\.md"] for the changes to 2 files:/)
-          .and have_output(/\* fix\.txt/)
-          .and have_output(/\* feature\.txt/)
-
         # Check it has a non-zero exit status
         expect(last_command_started).to have_exit_status(1)
+        # Verify it cannot chose a single template and provides guidance
+        expect(last_command_started).to have_output(<<~EXPECTED.chomp)
+          Unable to pick one template from ["bug_fix.md", "feature.md"] for the changes to 2 files:
+          * feature.txt
+          * fix.txt
+        EXPECTED
       end
     end
 
