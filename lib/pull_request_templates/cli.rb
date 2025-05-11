@@ -53,13 +53,13 @@ module PullRequestTemplates
     end
 
     def select_template(templates, changes)
-      routing_file = ".github/PULL_REQUEST_TEMPLATE/.routing.yml"
+      mapping_file = ".github/PULL_REQUEST_TEMPLATE/.mapping.yml"
       candidates = []
-      if File.exist?(routing_file)
-        routing = YAML.load_file(routing_file)
+      if File.exist?(mapping_file)
+        mapping = YAML.load_file(mapping_file)
         matches = Hash.new { |h, k| h[k] = [] }
         changes.each do |file|
-          routing.each do |template, patterns|
+          mapping.each do |template, patterns|
             Array(patterns).each do |pattern|
               matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB)
             end
