@@ -260,7 +260,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
 
         # Verify it outputs a valid GitHub PR URL with template parameter
         expect(last_command_started).to have_output(
-          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=feature.md}
+          %r{https://github.com/user/repo/compare/bug-fix-branch\?expand=1&quick_pull=1&template=feature.md}
         )
 
         # Check it has a successful exit status
