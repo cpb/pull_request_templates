@@ -59,7 +59,7 @@ module PullRequestTemplates
       raise AmbiguousTemplateSelection, <<~MESSAGE
         Unable to pick one template from #{templates} for the changes to #{changes.count} files:
 
-        * #{changes.join("\n*")}
+        * #{changes.join("\n* ")}
       MESSAGE
     end
 
