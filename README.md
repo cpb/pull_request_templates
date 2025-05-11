@@ -26,19 +26,50 @@ If bundler is not being used to manage dependencies, install the gem by executin
 gem install pull_request_templates
 ```
 
+## Configuration
+
+To support multiple templates and automatically select the right one based on changed files, add a `.mapping.yml` file to your template directory:
+
+```yaml
+# .github/PULL_REQUEST_TEMPLATE/.mapping.yml
+feature.md:
+  - "**/feature*.txt"
+bug_fix.md:
+  - "**/fix*.txt"
+```
+
+- Each key is a template filename.
+- Each value is a list of glob patterns (quoted for YAML compatibility).
+- The tool will select the template whose patterns match all changed files (MECE logic).
+- If more than one template matches, you'll get an error listing the ambiguous templates and files.
+
 ## Usage
 
 > **Note:** This is pre-release software. Currently, it only works with a single template in the pull request template directory.
 
 ### Setting Up Templates
 
-Place your PR templates in the `.github/PULL_REQUEST_TEMPLATE/` directory:
+Place your PR templates in the `.github/PULL_REQUEST_TEMPLATE/` directory. For example:
 
 ```
 .github/
 └── PULL_REQUEST_TEMPLATE/
-    └── template.md
+    ├── feature.md
+    ├── bug_fix.md
+    └── .mapping.yml
 ```
+
+The `.mapping.yml` file should define which templates apply to which files:
+
+```yaml
+# .github/PULL_REQUEST_TEMPLATE/.mapping.yml
+feature.md:
+  - "**/feature*.txt"
+bug_fix.md:
+  - "**/fix*.txt"
+```
+
+This setup allows the tool to automatically select the appropriate template based on your changes.
 
 ### Creating a Pull Request
 

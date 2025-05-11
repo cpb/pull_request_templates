@@ -1,4 +1,6 @@
 require "thor"
+require "yaml"
+require "pathname"
 
 module PullRequestTemplates
   class Cli < Thor
@@ -51,10 +53,29 @@ module PullRequestTemplates
     end
 
     def select_template(templates, changes)
-      # If there's only one template, use it
-      if templates.length == 1
-        templates.first
+      mapping_file = ".github/PULL_REQUEST_TEMPLATE/.mapping.yml"
+      candidates = []
+      if File.exist?(mapping_file)
+        mapping = YAML.load_file(mapping_file)
+        matches = Hash.new { |h, k| h[k] = [] }
+        changes.each do |file|
+          mapping.each do |template, patterns|
+            Array(patterns).each do |pattern|
+              matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB)
+            end
+          end
+        end
+        selected = matches.select { |_, files| files.sort == changes.sort }
+        candidates = selected.keys if selected.any?
       end
+      candidates = templates if candidates.empty?
+      if candidates.length == 1
+        return candidates.first
+      end
+      raise AmbiguousTemplateSelection, <<~MESSAGE
+        Unable to pick one template from #{candidates} for the changes to #{changes.count} files:
+        * #{changes.join("\n* ")}
+      MESSAGE
     end
 
     def generate_pr_url(branch, template)

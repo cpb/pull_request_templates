@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pull_request_templates (0.1.0)
+    pull_request_templates (0.2.0)
       thor (~> 1.3)
 
 GEM
@@ -41,6 +41,9 @@ GEM
     cucumber-messages (18.0.0)
     cucumber-tag-expressions (4.1.0)
     date (3.4.1)
+    debug (1.10.0)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
     diff-lcs (1.6.1)
     ffi (1.17.1)
     ffi (1.17.1-arm64-darwin)
@@ -73,6 +76,8 @@ GEM
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.2.1)
+    rdbg (0.1.0)
+      debug (>= 1.2.2)
     rdoc (6.13.1)
       psych (>= 4.0.0)
     regexp_parser (2.10.0)
@@ -140,6 +145,7 @@ DEPENDENCIES
   lefthook (~> 1.11)
   pull_request_templates!
   rake (~> 13.2)
+  rdbg
   rspec (~> 3.13)
   standard (~> 1.49)
 
