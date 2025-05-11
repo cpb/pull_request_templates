@@ -231,9 +231,9 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Add a mapping file with MECE path patterns using globs
         write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
           feature.md:
-            - feature*.txt
+            - "**/feature*.txt"
           bug_fix.md:
-            - fix*.txt
+            - "**/fix*.txt"
         YML
 
         # Add files to git
