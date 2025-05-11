@@ -331,7 +331,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add fix'"
       end
 
-      it "fails, and lists the matched templates and files they have in common" do
+      it "fails with a helpful message about using a fallback template" do
         # Run the command
         run_command "pull_request_templates pr-url"
         # Check it has a non-zero exit status
@@ -341,6 +341,15 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           Unable to pick one template from ["bug_fix.md", "feature.md"] for the changes to 2 files:
           * feature.txt
           * fix.txt
+
+          To resolve this, add a fallback template to your .mapping.yml:
+          default.md:
+            - "**/*"
+
+          Run this command to create the fallback template:
+          echo 'default.md:
+            - "**/*"
+          ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
         EXPECTED
       end
     end
