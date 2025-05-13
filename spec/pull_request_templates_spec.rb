@@ -5,12 +5,44 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     expect(PullRequestTemplates::VERSION).not_to be nil
   end
 
+  # Shared context for common Git setup
+  shared_context "git repository setup" do
+    before do
+      setup_aruba
+      run_command_and_stop "git init"
+      run_command_and_stop "git branch -m main"  # Rename default branch to main
+      run_command_and_stop "git config user.email 'test@example.com'"
+      run_command_and_stop "git config user.name 'Test User'"
+    end
+  end
+
+  # Shared context for common remote setup
+  shared_context "git remote setup" do
+    before do
+      run_command_and_stop "git remote add origin https://github.com/user/repo.git"
+    end
+  end
+
+  # Shared context for common initial commit
+  shared_context "initial commit" do
+    before do
+      write_file ".gitkeep", ""
+      run_command_and_stop "git add .gitkeep"
+      run_command_and_stop "git commit -m 'Initial commit'"
+    end
+  end
+
+  # Shared context for common template directory
+  shared_context "template directory" do
+    before do
+      run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
+    end
+  end
+
   describe "pr-url command" do
     context "when no templates are configured" do
-      before do
-        # Mock a Git repository environment
-        setup_aruba
-      end
+      include_context "git repository setup"
+      include_context "initial commit"
 
       it "outputs a message about no templates and exits successfully" do
         # Run the command
@@ -25,24 +57,11 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     end
 
     context "when GitHub pull request templates exist but on default branch" do
+      include_context "git repository setup"
+      include_context "initial commit"
+      include_context "template directory"
+
       before do
-        # Set up a git repository
-        setup_aruba
-
-        # Initialize git repo and ensure main branch
-        run_command_and_stop "git init"
-        run_command_and_stop "git branch -m main"  # Rename default branch to main
-        run_command_and_stop "git config user.email 'test@example.com'"
-        run_command_and_stop "git config user.name 'Test User'"
-
-        # Create initial commit to establish main branch
-        write_file ".gitkeep", ""
-        run_command_and_stop "git add .gitkeep"
-        run_command_and_stop "git commit -m 'Initial commit'"
-
-        # Create GitHub pull request template directory
-        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
-
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
@@ -73,24 +92,11 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     end
 
     context "when no changes detected on feature branch" do
+      include_context "git repository setup"
+      include_context "initial commit"
+      include_context "template directory"
+
       before do
-        # Set up a git repository
-        setup_aruba
-
-        # Initialize git repo and ensure main branch
-        run_command_and_stop "git init"
-        run_command_and_stop "git branch -m main"  # Rename default branch to main
-        run_command_and_stop "git config user.email 'test@example.com'"
-        run_command_and_stop "git config user.name 'Test User'"
-
-        # Create initial commit to establish main branch
-        write_file ".gitkeep", ""
-        run_command_and_stop "git add .gitkeep"
-        run_command_and_stop "git commit -m 'Initial commit'"
-
-        # Create GitHub pull request template directory
-        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
-
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
@@ -124,27 +130,12 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     end
 
     context "when a single template is available" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
       before do
-        # Set up a git repository
-        setup_aruba
-
-        # Initialize git repo and ensure main branch
-        run_command_and_stop "git init"
-        run_command_and_stop "git branch -m main"  # Rename default branch to main
-        run_command_and_stop "git config user.email 'test@example.com'"
-        run_command_and_stop "git config user.name 'Test User'"
-
-        # Configure origin remote
-        run_command_and_stop "git remote add origin https://github.com/user/repo.git"
-
-        # Create initial commit to establish main branch
-        write_file ".gitkeep", ""
-        run_command_and_stop "git add .gitkeep"
-        run_command_and_stop "git commit -m 'Initial commit'"
-
-        # Create GitHub pull request template directory
-        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
-
         # Add a bug_fix template (different from the hardcoded "feature.md")
         write_file ".github/PULL_REQUEST_TEMPLATE/bug_fix.md", <<~MD
           # Bug Fix
@@ -184,27 +175,12 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     end
 
     context "when one among multiple templates describe the change" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
       before do
-        # Set up a git repository
-        setup_aruba
-
-        # Initialize git repo and ensure main branch
-        run_command_and_stop "git init"
-        run_command_and_stop "git branch -m main"  # Rename default branch to main
-        run_command_and_stop "git config user.email 'test@example.com'"
-        run_command_and_stop "git config user.name 'Test User'"
-
-        # Configure origin remote
-        run_command_and_stop "git remote add origin https://github.com/user/repo.git"
-
-        # Create initial commit to establish main branch
-        write_file ".gitkeep", ""
-        run_command_and_stop "git add .gitkeep"
-        run_command_and_stop "git commit -m 'Initial commit'"
-
-        # Create GitHub pull request template directory
-        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
-
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
@@ -247,11 +223,6 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         write_file "feature.txt", "This is a feature contribution"
         run_command_and_stop "git add feature.txt"
         run_command_and_stop "git commit -m 'Add feature'"
-
-        # # Match a fix contribution
-        # write_file "fix.txt", "This is a bug fix"
-        # run_command_and_stop "git add fix.txt"
-        # run_command_and_stop "git commit -m 'Add fix'"
       end
 
       it "outputs a valid pull request URL" do
@@ -269,27 +240,12 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     end
 
     context "when multiple templates could describe the change" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
       before do
-        # Set up a git repository
-        setup_aruba
-
-        # Initialize git repo and ensure main branch
-        run_command_and_stop "git init"
-        run_command_and_stop "git branch -m main"  # Rename default branch to main
-        run_command_and_stop "git config user.email 'test@example.com'"
-        run_command_and_stop "git config user.name 'Test User'"
-
-        # Configure origin remote
-        run_command_and_stop "git remote add origin https://github.com/user/repo.git"
-
-        # Create initial commit to establish main branch
-        write_file ".gitkeep", ""
-        run_command_and_stop "git add .gitkeep"
-        run_command_and_stop "git commit -m 'Initial commit'"
-
-        # Create GitHub pull request template directory
-        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
-
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
@@ -355,27 +311,12 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     end
 
     context "when all conditions are met for generating a PR URL" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
       before do
-        # Set up a git repository
-        setup_aruba
-
-        # Initialize git repo and ensure main branch
-        run_command_and_stop "git init"
-        run_command_and_stop "git branch -m main"  # Rename default branch to main
-        run_command_and_stop "git config user.email 'test@example.com'"
-        run_command_and_stop "git config user.name 'Test User'"
-
-        # Configure origin remote
-        run_command_and_stop "git remote add origin https://github.com/user/repo.git"
-
-        # Create initial commit to establish main branch
-        write_file ".gitkeep", ""
-        run_command_and_stop "git add .gitkeep"
-        run_command_and_stop "git commit -m 'Initial commit'"
-
-        # Create GitHub pull request template directory
-        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
-
         # Add a feature template
         write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
           # Feature Request
@@ -416,27 +357,12 @@ RSpec.describe PullRequestTemplates, type: :aruba do
     end
 
     context "when a default template exists with catch-all pattern" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
       before do
-        # Set up a git repository
-        setup_aruba
-
-        # Initialize git repo and ensure main branch
-        run_command_and_stop "git init"
-        run_command_and_stop "git branch -m main"  # Rename default branch to main
-        run_command_and_stop "git config user.email 'test@example.com'"
-        run_command_and_stop "git config user.name 'Test User'"
-
-        # Configure origin remote
-        run_command_and_stop "git remote add origin https://github.com/user/repo.git"
-
-        # Create initial commit to establish main branch
-        write_file ".gitkeep", ""
-        run_command_and_stop "git add .gitkeep"
-        run_command_and_stop "git commit -m 'Initial commit'"
-
-        # Create GitHub pull request template directory
-        run_command_and_stop "mkdir -p .github/PULL_REQUEST_TEMPLATE"
-
         # Add multiple templates
         write_file ".github/PULL_REQUEST_TEMPLATE/first.md", <<~MD
           # First Template
