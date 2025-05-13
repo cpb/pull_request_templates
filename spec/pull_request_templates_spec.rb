@@ -300,10 +300,12 @@ RSpec.describe PullRequestTemplates, type: :aruba do
 
           To resolve this, add a fallback template to your .mapping.yml:
           default.md:
+            - "*"
             - "**/*"
 
           Run this command to create the fallback template:
           echo 'default.md:
+            - "*"
             - "**/*"
           ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
         EXPECTED
