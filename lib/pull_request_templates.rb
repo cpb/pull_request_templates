@@ -3,7 +3,10 @@
 require_relative "pull_request_templates/version"
 require_relative "pull_request_templates/cli"
 
+require "thor/error"
+
 module PullRequestTemplates
   Error = Class.new(StandardError)
-  AmbiguousTemplateSelection = Class.new(Error)
+  CliError = Class.new(Thor::Error)
+  AmbiguousTemplateSelection = Class.new(CliError)
 end

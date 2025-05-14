@@ -69,12 +69,30 @@ module PullRequestTemplates
         candidates = selected.keys if selected.any?
       end
       candidates = templates if candidates.empty?
+
+      # If we have a default template with catch-all pattern, use it when multiple templates match
+      if candidates.length > 1 && mapping&.key?("default.md")
+        return "default.md"
+      end
+
       if candidates.length == 1
         return candidates.first
       end
+
       raise AmbiguousTemplateSelection, <<~MESSAGE
         Unable to pick one template from #{candidates} for the changes to #{changes.count} files:
         * #{changes.join("\n* ")}
+
+        To resolve this, add a fallback template to your .mapping.yml:
+        default.md:
+          - "*"
+          - "**/*"
+
+        Run this command to create the fallback template:
+        echo 'default.md:
+          - "*"
+          - "**/*"
+        ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
       MESSAGE
     end
 
