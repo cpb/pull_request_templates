@@ -40,7 +40,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
   end
 
   describe "pr-url command" do
-    context "when no templates are configured" do
+    context "with minimal setup (no templates)" do
       include_context "git repository setup"
       include_context "initial commit"
 
@@ -56,7 +56,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when GitHub pull request templates exist but on default branch" do
+    context "with minimal setup (on default branch)" do
       include_context "git repository setup"
       include_context "initial commit"
       include_context "template directory"
@@ -91,7 +91,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when no changes detected on feature branch" do
+    context "with minimal setup (no changes)" do
       include_context "git repository setup"
       include_context "initial commit"
       include_context "template directory"
@@ -129,7 +129,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when a single template is available" do
+    context "with single template" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -174,7 +174,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when one among multiple templates describe the change" do
+    context "with multiple templates" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -225,7 +225,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add feature'"
       end
 
-      it "outputs a valid pull request URL" do
+      it "selects template based on file patterns" do
         # Run the command
         run_command_and_stop "pull_request_templates pr-url"
 
@@ -239,7 +239,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when multiple templates could describe the change" do
+    context "with ambiguous templates" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -287,7 +287,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add fix'"
       end
 
-      it "fails with a helpful message about using a fallback template" do
+      it "guides user to add fallback template" do
         # Run the command
         run_command "pull_request_templates pr-url"
         # Check it has a non-zero exit status
@@ -312,7 +312,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when all conditions are met for generating a PR URL" do
+    context "with valid setup" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -344,7 +344,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add feature'"
       end
 
-      it "outputs a valid pull request URL" do
+      it "generates correct PR URL" do
         # Run the command
         run_command_and_stop "pull_request_templates pr-url"
 
@@ -358,7 +358,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "when a default template exists with catch-all pattern" do
+    context "with fallback template" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -405,7 +405,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add feature and docs'"
       end
 
-      it "selects the default template when multiple templates match" do
+      it "handles multiple matching templates" do
         # Run the command
         run_command_and_stop "pull_request_templates pr-url"
 
