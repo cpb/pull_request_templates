@@ -397,7 +397,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
               pattern:
                 - "*.md"
             - file: default.md
-              pattern: "**/*"
+              pattern: "**"
               fallback: true
         YML
 
