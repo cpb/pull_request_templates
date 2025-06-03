@@ -206,10 +206,11 @@ RSpec.describe PullRequestTemplates, type: :aruba do
 
         # Add a mapping file with MECE path patterns using globs
         write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
-          feature.md:
-            - "**/feature*.txt"
-          bug_fix.md:
-            - "**/fix*.txt"
+          templates:
+            - file: feature.md
+              pattern: "**/feature*.txt"
+            - file: bug_fix.md
+              pattern: "**/fix*.txt"
         YML
 
         # Add files to git
@@ -239,7 +240,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "with ambiguous templates" do
+    context "with ambiguous templates (no configuration)" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -299,14 +300,19 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           * fix.txt
 
           To resolve this, add a fallback template to your .mapping.yml:
-          default.md:
-            - "*"
-            - "**/*"
+          - file: default.md
+            pattern:
+              - "*"
+              - "**/*"
+            fallback: true
 
           Run this command to create the fallback template:
-          echo 'default.md:
-            - "*"
-            - "**/*"
+          echo 'templates:
+            - file: default.md
+              pattern:
+                - "*"
+                - "**/*"
+              fallback: true
           ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
         EXPECTED
       end
@@ -383,12 +389,16 @@ RSpec.describe PullRequestTemplates, type: :aruba do
 
         # Add mapping file with default template
         write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
-          first.md:
-            - "*.txt"
-          second.md:
-            - "*.md"
-          default.md:
-            - "**/*"
+          templates:
+            - pattern:
+              - "*.txt"
+              file: first.md
+            - file: second.md
+              pattern:
+                - "*.md"
+            - file: default.md
+              pattern: "**/*"
+              fallback: true
         YML
 
         # Add files to git

@@ -52,14 +52,15 @@ module PullRequestTemplates
       changes.split("\n").reject(&:empty?)
     end
 
-    def select_template(templates, changes)
+    def select_template(template_files, changes)
       mapping_file = ".github/PULL_REQUEST_TEMPLATE/.mapping.yml"
       candidates = []
       if File.exist?(mapping_file)
-        mapping = YAML.load_file(mapping_file)
+        templates = YAML.load_file(mapping_file).fetch("templates")
         matches = Hash.new { |h, k| h[k] = [] }
         changes.each do |file|
-          mapping.each do |template, patterns|
+          templates.each do |template|
+            patterns = template.fetch("pattern")
             Array(patterns).each do |pattern|
               matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB)
             end
@@ -68,30 +69,36 @@ module PullRequestTemplates
         selected = matches.select { |_, files| files.sort == changes.sort }
         candidates = selected.keys if selected.any?
       end
-      candidates = templates if candidates.empty?
+      candidates = template_files.map { {"file" => _1} } if candidates.empty?
 
       # If we have a default template with catch-all pattern, use it when multiple templates match
-      if candidates.length > 1 && mapping&.key?("default.md")
-        return "default.md"
+      if candidates.length > 1
+        fallback = candidates.find { _1.fetch("fallback", false) }
+        return fallback.fetch("file") if fallback
       end
 
       if candidates.length == 1
-        return candidates.first
+        return candidates.first.fetch("file")
       end
 
       raise AmbiguousTemplateSelection, <<~MESSAGE
-        Unable to pick one template from #{candidates} for the changes to #{changes.count} files:
+        Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
         * #{changes.join("\n* ")}
 
         To resolve this, add a fallback template to your .mapping.yml:
-        default.md:
-          - "*"
-          - "**/*"
+        - file: default.md
+          pattern:
+            - "*"
+            - "**/*"
+          fallback: true
 
         Run this command to create the fallback template:
-        echo 'default.md:
-          - "*"
-          - "**/*"
+        echo 'templates:
+          - file: default.md
+            pattern:
+              - "*"
+              - "**/*"
+            fallback: true
         ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
       MESSAGE
     end
