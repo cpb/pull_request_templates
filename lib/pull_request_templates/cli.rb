@@ -53,7 +53,7 @@ module PullRequestTemplates
     end
 
     def select_template(template_files, changes)
-      mapping_file = ".github/PULL_REQUEST_TEMPLATE/.mapping.yml"
+      mapping_file = ".github/PULL_REQUEST_TEMPLATE/config.yml"
       candidates = []
       if File.exist?(mapping_file)
         templates = YAML.load_file(mapping_file).fetch("templates")
@@ -86,7 +86,7 @@ module PullRequestTemplates
           Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
           * #{changes.join("\n* ")}
 
-          To resolve this, add a fallback template to your .mapping.yml:
+          To resolve this, add a fallback template to your config.yml:
           - file: default.md
             pattern: "**"
             fallback: true
@@ -96,7 +96,7 @@ module PullRequestTemplates
           Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
           * #{changes.join("\n* ")}
 
-          To resolve this, add a fallback template to your .mapping.yml:
+          To resolve this, add a fallback template to your config.yml:
           - file: default.md
             pattern: "**"
             fallback: true
@@ -106,7 +106,7 @@ module PullRequestTemplates
             - file: default.md
               pattern: "**"
               fallback: true
-          ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
+          ' >> .github/PULL_REQUEST_TEMPLATE/config.yml
         MESSAGE
       end
     end
