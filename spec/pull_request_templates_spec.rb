@@ -204,8 +204,8 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           Steps to reproduce the behavior
         MD
 
-        # Add a mapping file with MECE path patterns using globs
-        write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
+        # Add a config file with MECE path patterns using globs
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
           templates:
             - file: feature.md
               pattern: "**/feature*.txt"
@@ -226,7 +226,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add feature'"
       end
 
-      it "selects template based on file patterns" do
+      it "selects template based on file patterns using config.yml" do
         # Run the command
         run_command_and_stop "pull_request_templates pr-url"
 
