@@ -81,22 +81,34 @@ module PullRequestTemplates
         return candidates.first.fetch("file")
       end
 
-      raise AmbiguousTemplateSelection, <<~MESSAGE
-        Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
-        * #{changes.join("\n* ")}
+      if File.exist?(mapping_file)
+        raise AmbiguousTemplateSelection, <<~MESSAGE
+          Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
+          * #{changes.join("\n* ")}
 
-        To resolve this, add a fallback template to your .mapping.yml:
-        - file: default.md
-          pattern: "**"
-          fallback: true
-
-        Run this command to create the fallback template:
-        echo 'templates:
+          To resolve this, add a fallback template to your .mapping.yml:
           - file: default.md
             pattern: "**"
             fallback: true
-        ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
-      MESSAGE
+        MESSAGE
+      else
+        raise AmbiguousTemplateSelection, <<~MESSAGE
+          Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
+          * #{changes.join("\n* ")}
+
+          To resolve this, add a fallback template to your .mapping.yml:
+          - file: default.md
+            pattern: "**"
+            fallback: true
+
+          Run this command to create the fallback template:
+          echo 'templates:
+            - file: default.md
+              pattern: "**"
+              fallback: true
+          ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
+        MESSAGE
+      end
     end
 
     def generate_pr_url(branch, template)

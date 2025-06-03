@@ -314,6 +314,74 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
+    context "with ambiguous templates (configuration without fallback)" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
+      before do
+        # Add multiple templates
+        write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
+          # Feature Request
+          Feature template content
+        MD
+
+        write_file ".github/PULL_REQUEST_TEMPLATE/bug_fix.md", <<~MD
+          # Bug Fix
+          Bug fix template content
+        MD
+
+        # Add mapping file with overlapping patterns
+        write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
+          templates:
+            - file: feature.md
+              pattern:
+                - "**/*.rb"
+                - "**/*.txt"
+            - file: bug_fix.md
+              pattern:
+                - "**/*.rb"
+                - "**/*.md"
+        YML
+
+        # Add files to git
+        run_command_and_stop "git add .github"
+        run_command_and_stop "git commit -m 'Add PR templates'"
+
+        # Create a feature branch with changes
+        run_command_and_stop "git checkout -b feature-branch"
+
+        # Make changes that match both templates
+        write_file "app.rb", "This is Ruby code"
+        write_file "test.txt", "This is a test"
+        write_file "docs.md", "This is documentation"
+        run_command_and_stop "git add app.rb test.txt docs.md"
+        run_command_and_stop "git commit -m 'Add mixed changes'"
+      end
+
+      it "guides user to add fallback template when patterns overlap" do
+        # Run the command
+        run_command "pull_request_templates pr-url"
+
+        # Check it has a non-zero exit status
+        expect(last_command_started).to have_exit_status(1)
+
+        # Verify it cannot chose a single template and provides guidance
+        expect(last_command_started).to have_output(<<~EXPECTED.chomp)
+          Unable to pick one template from ["bug_fix.md", "feature.md"] for the changes to 3 files:
+          * app.rb
+          * docs.md
+          * test.txt
+
+          To resolve this, add a fallback template to your .mapping.yml:
+          - file: default.md
+            pattern: "**"
+            fallback: true
+        EXPECTED
+      end
+    end
+
     context "with valid setup" do
       include_context "git repository setup"
       include_context "git remote setup"
