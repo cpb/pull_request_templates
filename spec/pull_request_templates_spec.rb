@@ -204,8 +204,8 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           Steps to reproduce the behavior
         MD
 
-        # Add a mapping file with MECE path patterns using globs
-        write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
+        # Add a config file with MECE path patterns using globs
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
           templates:
             - file: feature.md
               pattern: "**/feature*.txt"
@@ -226,7 +226,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add feature'"
       end
 
-      it "selects template based on file patterns" do
+      it "selects template based on file patterns using config.yml" do
         # Run the command
         run_command_and_stop "pull_request_templates pr-url"
 
@@ -299,7 +299,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           * feature.txt
           * fix.txt
 
-          To resolve this, add a fallback template to your .mapping.yml:
+          To resolve this, add a fallback template to your config.yml:
           - file: default.md
             pattern: "**"
             fallback: true
@@ -309,7 +309,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
             - file: default.md
               pattern: "**"
               fallback: true
-          ' >> .github/PULL_REQUEST_TEMPLATE/.mapping.yml
+          ' >> .github/PULL_REQUEST_TEMPLATE/config.yml
         EXPECTED
       end
     end
@@ -333,7 +333,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         MD
 
         # Add mapping file with overlapping patterns
-        write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
           templates:
             - file: feature.md
               pattern:
@@ -374,7 +374,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           * docs.md
           * test.txt
 
-          To resolve this, add a fallback template to your .mapping.yml:
+          To resolve this, add a fallback template to your config.yml:
           - file: default.md
             pattern: "**"
             fallback: true
@@ -452,7 +452,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         MD
 
         # Add mapping file with default template
-        write_file ".github/PULL_REQUEST_TEMPLATE/.mapping.yml", <<~YML
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
           templates:
             - pattern:
               - "*.txt"
