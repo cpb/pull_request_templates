@@ -301,13 +301,13 @@ RSpec.describe PullRequestTemplates, type: :aruba do
 
           To resolve this, add a fallback template to your config.yml:
           - file: default.md
-            pattern: "**"
+            pattern: "**/*"
             fallback: true
 
           Run this command to create the fallback template:
           echo 'templates:
             - file: default.md
-              pattern: "**"
+              pattern: "**/*"
               fallback: true
           ' >> .github/PULL_REQUEST_TEMPLATE/config.yml
         EXPECTED
@@ -376,7 +376,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
 
           To resolve this, add a fallback template to your config.yml:
           - file: default.md
-            pattern: "**"
+            pattern: "**/*"
             fallback: true
         EXPECTED
       end
@@ -461,7 +461,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
               pattern:
                 - "*.md"
             - file: default.md
-              pattern: "**"
+              pattern: "**/*"
               fallback: true
         YML
 

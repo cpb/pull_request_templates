@@ -88,7 +88,7 @@ module PullRequestTemplates
 
           To resolve this, add a fallback template to your config.yml:
           - file: default.md
-            pattern: "**"
+            pattern: "**/*"
             fallback: true
         MESSAGE
       else
@@ -98,13 +98,13 @@ module PullRequestTemplates
 
           To resolve this, add a fallback template to your config.yml:
           - file: default.md
-            pattern: "**"
+            pattern: "**/*"
             fallback: true
 
           Run this command to create the fallback template:
           echo 'templates:
             - file: default.md
-              pattern: "**"
+              pattern: "**/*"
               fallback: true
           ' >> .github/PULL_REQUEST_TEMPLATE/config.yml
         MESSAGE
