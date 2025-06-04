@@ -66,8 +66,8 @@ module PullRequestTemplates
             end
           end
         end
-        selected = matches.select { |_, files| files.sort == changes.sort }
-        candidates = selected.keys if selected.any?
+        # Consider any template that matches at least one file
+        candidates = matches.keys.select { |template| matches[template].any? }
       end
       
       # When no config exists or no matches found, use feature.md if available, otherwise first template
