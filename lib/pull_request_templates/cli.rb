@@ -62,7 +62,7 @@ module PullRequestTemplates
           templates.each do |template|
             patterns = template.fetch("pattern")
             Array(patterns).each do |pattern|
-              matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB)
+              matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB | File::Constants::FNM_DOTMATCH)
             end
           end
         end

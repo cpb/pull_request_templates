@@ -492,5 +492,56 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         expect(last_command_started).to have_exit_status(0)
       end
     end
+
+    context "with fallback template and dot files" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
+      before do
+        # Add templates
+        write_file ".github/PULL_REQUEST_TEMPLATE/default.md", <<~MD
+          # Default Template
+          Default template content
+        MD
+
+        # Add config file with fallback template
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
+          templates:
+            - file: default.md
+              pattern: "**/*"
+              fallback: true
+        YML
+
+        # Add files to git
+        run_command_and_stop "git add .github"
+        run_command_and_stop "git commit -m 'Add PR templates'"
+
+        # Create a feature branch with changes
+        run_command_and_stop "git checkout -b feature-branch"
+
+        # Make changes that include dot files and nested paths
+        write_file ".github/PULL_REQUEST_TEMPLATE/first.md", "New template"
+        write_file ".github/pull_request_template.md", "Another template"
+        write_file "README.md", "Updated README"
+        write_file "feature.txt", "New feature"
+        run_command_and_stop "git add .github README.md feature.txt"
+        run_command_and_stop "git commit -m 'Add templates and files'"
+      end
+
+      it "handles dot files and nested paths with fallback template" do
+        # Run the command
+        run_command_and_stop "pull_request_templates pr-url"
+
+        # Verify it outputs a valid GitHub PR URL with the default template
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=default.md}
+        )
+
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
+      end
+    end
   end
 end
