@@ -77,38 +77,11 @@ module PullRequestTemplates
         return fallback.fetch("file") if fallback
       end
 
-      if candidates.length == 1
-        return candidates.first.fetch("file")
-      end
+      # Return the first matching template if we have any candidates
+      return candidates.first.fetch("file") if candidates.any?
 
-      if File.exist?(mapping_file)
-        raise AmbiguousTemplateSelection, <<~MESSAGE
-          Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
-          * #{changes.join("\n* ")}
-
-          To resolve this, add a fallback template to your config.yml:
-          - file: default.md
-            pattern: "**/*"
-            fallback: true
-        MESSAGE
-      else
-        raise AmbiguousTemplateSelection, <<~MESSAGE
-          Unable to pick one template from #{candidates.map { _1.fetch("file") }} for the changes to #{changes.count} files:
-          * #{changes.join("\n* ")}
-
-          To resolve this, add a fallback template to your config.yml:
-          - file: default.md
-            pattern: "**/*"
-            fallback: true
-
-          Run this command to create the fallback template:
-          echo 'templates:
-            - file: default.md
-              pattern: "**/*"
-              fallback: true
-          ' >> .github/PULL_REQUEST_TEMPLATE/config.yml
-        MESSAGE
-      end
+      # No matching templates
+      nil
     end
 
     def generate_pr_url(branch, template)
@@ -118,8 +91,10 @@ module PullRequestTemplates
       # Extract repository path from SSH URL format (git@github.com:user/repo.git)
       repo_path = remote_url.sub(/^git@github\.com:/, "").sub(/\.git$/, "")
 
-      # Generate GitHub pull request URL with template parameter
-      "https://github.com/#{repo_path}/compare/#{branch}?expand=1&quick_pull=1&template=#{template}"
+      # Generate GitHub pull request URL with optional template parameter
+      url = "https://github.com/#{repo_path}/compare/#{branch}?expand=1&quick_pull=1"
+      url += "&template=#{template}" if template
+      url
     end
   end
 end
