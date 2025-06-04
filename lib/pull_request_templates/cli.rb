@@ -71,7 +71,7 @@ module PullRequestTemplates
       end
       candidates = template_files.map { {"file" => _1} } if candidates.empty?
 
-      # If we have a default template with catch-all pattern, use it when multiple templates match
+      # If we have a template with fallback: true, use it when multiple templates match
       if candidates.length > 1
         fallback = candidates.find { _1.fetch("fallback", false) }
         return fallback.fetch("file") if fallback
