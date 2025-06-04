@@ -543,5 +543,67 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         expect(last_command_started).to have_exit_status(0)
       end
     end
+
+    context "with no matching templates" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
+      before do
+        # Add templates with specific patterns
+        write_file ".github/PULL_REQUEST_TEMPLATE/feature.md", <<~MD
+          # Feature Request
+          Feature template content
+        MD
+
+        write_file ".github/PULL_REQUEST_TEMPLATE/bug_fix.md", <<~MD
+          # Bug Fix
+          Bug fix template content
+        MD
+
+        # Add config file with specific patterns
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
+          templates:
+            - file: feature.md
+              pattern: "**/*.rb"
+            - file: bug_fix.md
+              pattern: "**/*.md"
+        YML
+
+        # Add files to git
+        run_command_and_stop "git add .github"
+        run_command_and_stop "git commit -m 'Add PR templates'"
+
+        # Create a feature branch with changes
+        run_command_and_stop "git checkout -b feature-branch"
+
+        # Make changes that don't match any template patterns
+        write_file "config.json", "{}"
+        write_file "data.txt", "Some data"
+        run_command_and_stop "git add config.json data.txt"
+        run_command_and_stop "git commit -m 'Add config and data'"
+      end
+
+      it "outputs a message about no matching templates and exits with error" do
+        # Run the command
+        run_command "pull_request_templates pr-url"
+
+        # Check it has a non-zero exit status
+        expect(last_command_started).to have_exit_status(1)
+
+        # Verify it cannot find a matching template and provides guidance
+        expect(last_command_started).to have_output(<<~EXPECTED.chomp)
+          Unable to pick one template from ["bug_fix.md", "feature.md"] for the changes to 2 files:
+          * config.json
+          * data.txt
+
+          To resolve this, add a fallback template to your config.yml:
+          - file: default.md
+            pattern: "**/*"
+            fallback: true
+        EXPECTED
+      end
+    end
   end
 end
