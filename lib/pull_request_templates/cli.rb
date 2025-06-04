@@ -69,7 +69,13 @@ module PullRequestTemplates
         selected = matches.select { |_, files| files.sort == changes.sort }
         candidates = selected.keys if selected.any?
       end
-      candidates = template_files.map { {"file" => _1} }.sort_by { _1["file"] } if candidates.empty?
+      
+      # When no config exists or no matches found, use feature.md if available, otherwise first template
+      if candidates.empty?
+        candidates = template_files.map { {"file" => _1} }
+        feature_template = candidates.find { _1["file"] == "feature.md" }
+        return feature_template["file"] if feature_template
+      end
 
       # If we have a template with fallback: true, use it when multiple templates match
       if candidates.length > 1
