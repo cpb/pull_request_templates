@@ -69,7 +69,7 @@ module PullRequestTemplates
         selected = matches.select { |_, files| files.sort == changes.sort }
         candidates = selected.keys if selected.any?
       end
-      candidates = template_files.map { {"file" => _1} } if candidates.empty?
+      candidates = template_files.map { {"file" => _1} }.sort_by { _1["file"] } if candidates.empty?
 
       # If we have a template with fallback: true, use it when multiple templates match
       if candidates.length > 1
@@ -89,7 +89,7 @@ module PullRequestTemplates
       remote_url = `git config --get remote.origin.url`.strip
 
       # Extract repository path from SSH URL format (git@github.com:user/repo.git)
-      repo_path = remote_url.sub(/^git@github\.com:/, "").sub(/\.git$/, "")
+      repo_path = remote_url.sub(/^git@github\.com:/, "").sub(/\.git$/, "").sub(/^https:\/\/github\.com\//, "")
 
       # Generate GitHub pull request URL with optional template parameter
       url = "https://github.com/#{repo_path}/compare/#{branch}?expand=1&quick_pull=1"
