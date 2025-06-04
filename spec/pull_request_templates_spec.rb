@@ -207,10 +207,10 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Add a config file with MECE path patterns using globs
         write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
           templates:
-            - file: feature.md
-              pattern: "**/feature*.txt"
             - file: bug_fix.md
               pattern: "**/fix*.txt"
+            - file: feature.md
+              pattern: "**/feature*.txt"
         YML
 
         # Add files to git
@@ -288,13 +288,13 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add fix'"
       end
 
-      it "selects the first available template" do
+      it "generates URL without template parameter" do
         # Run the command
         run_command_and_stop "pull_request_templates pr-url"
 
-        # Verify it outputs a valid GitHub PR URL with the first template
+        # Verify it outputs a valid GitHub PR URL without template parameter
         expect(last_command_started).to have_output(
-          %r{https://github.com/user/repo/compare/bug-fix-branch\?expand=1&quick_pull=1&template=feature.md}
+          %r{https://github.com/user/repo/compare/bug-fix-branch\?expand=1&quick_pull=1}
         )
 
         # Check it has a successful exit status
@@ -401,71 +401,6 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Verify it outputs a valid GitHub PR URL with template parameter
         expect(last_command_started).to have_output(
           %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=feature.md}
-        )
-
-        # Check it has a successful exit status
-        expect(last_command_started).to have_exit_status(0)
-      end
-    end
-
-    context "with fallback template" do
-      include_context "git repository setup"
-      include_context "git remote setup"
-      include_context "initial commit"
-      include_context "template directory"
-
-      before do
-        # Add multiple templates
-        write_file ".github/PULL_REQUEST_TEMPLATE/first.md", <<~MD
-          # First Template
-          First template content
-        MD
-
-        write_file ".github/PULL_REQUEST_TEMPLATE/second.md", <<~MD
-          # Second Template
-          Second template content
-        MD
-
-        write_file ".github/PULL_REQUEST_TEMPLATE/default.md", <<~MD
-          # Default Template
-          Default template content
-        MD
-
-        # Add mapping file with default template
-        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
-          templates:
-            - pattern:
-              - "*.txt"
-              file: first.md
-            - file: second.md
-              pattern:
-                - "*.md"
-            - file: default.md
-              pattern: "**/*"
-              fallback: true
-        YML
-
-        # Add files to git
-        run_command_and_stop "git add .github"
-        run_command_and_stop "git commit -m 'Add PR templates'"
-
-        # Create a feature branch with changes
-        run_command_and_stop "git checkout -b feature-branch"
-
-        # Make changes that match multiple templates
-        write_file "feature.txt", "This is a feature"
-        write_file "docs.md", "This is documentation"
-        run_command_and_stop "git add feature.txt docs.md"
-        run_command_and_stop "git commit -m 'Add feature and docs'"
-      end
-
-      it "handles multiple matching templates" do
-        # Run the command
-        run_command_and_stop "pull_request_templates pr-url"
-
-        # Verify it outputs a valid GitHub PR URL with the default template
-        expect(last_command_started).to have_output(
-          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=default.md}
         )
 
         # Check it has a successful exit status

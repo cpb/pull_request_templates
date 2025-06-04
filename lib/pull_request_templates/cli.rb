@@ -54,40 +54,19 @@ module PullRequestTemplates
 
     def select_template(template_files, changes)
       mapping_file = ".github/PULL_REQUEST_TEMPLATE/config.yml"
-      candidates = []
       if File.exist?(mapping_file)
         templates = YAML.load_file(mapping_file).fetch("templates")
-        matches = Hash.new { |h, k| h[k] = [] }
-        changes.each do |file|
-          templates.each do |template|
+        templates.each do |template|
+          changes.each do |file|
             patterns = template.fetch("pattern")
             Array(patterns).each do |pattern|
-              matches[template] << file if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB | File::Constants::FNM_DOTMATCH)
+              return template.fetch("file") if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB | File::Constants::FNM_DOTMATCH)
             end
           end
         end
-        # Consider any template that matches at least one file
-        candidates = matches.keys.select { |template| matches[template].any? }
+      else
+        template_files.first
       end
-      
-      # When no config exists or no matches found, use feature.md if available, otherwise first template
-      if candidates.empty?
-        candidates = template_files.map { {"file" => _1} }
-        feature_template = candidates.find { _1["file"] == "feature.md" }
-        return feature_template["file"] if feature_template
-      end
-
-      # If we have a template with fallback: true, use it when multiple templates match
-      if candidates.length > 1
-        fallback = candidates.find { _1.fetch("fallback", false) }
-        return fallback.fetch("file") if fallback
-      end
-
-      # Return the first matching template if we have any candidates
-      return candidates.first.fetch("file") if candidates.any?
-
-      # No matching templates
-      nil
     end
 
     def generate_pr_url(branch, template)
