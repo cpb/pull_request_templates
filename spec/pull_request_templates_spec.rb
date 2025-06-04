@@ -288,29 +288,17 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add fix'"
       end
 
-      it "guides user to add fallback template" do
+      it "selects the first available template" do
         # Run the command
-        run_command "pull_request_templates pr-url"
-        # Check it has a non-zero exit status
-        expect(last_command_started).to have_exit_status(1)
-        # Verify it cannot chose a single template and provides guidance
-        expect(last_command_started).to have_output(<<~EXPECTED.chomp)
-          Unable to pick one template from ["bug_fix.md", "feature.md"] for the changes to 2 files:
-          * feature.txt
-          * fix.txt
+        run_command_and_stop "pull_request_templates pr-url"
 
-          To resolve this, add a fallback template to your config.yml:
-          - file: default.md
-            pattern: "**/*"
-            fallback: true
+        # Verify it outputs a valid GitHub PR URL with the first template
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/bug-fix-branch\?expand=1&quick_pull=1&template=feature.md}
+        )
 
-          Run this command to create the fallback template:
-          echo 'templates:
-            - file: default.md
-              pattern: "**/*"
-              fallback: true
-          ' >> .github/PULL_REQUEST_TEMPLATE/config.yml
-        EXPECTED
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
       end
     end
 
@@ -360,25 +348,17 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add mixed changes'"
       end
 
-      it "guides user to add fallback template when patterns overlap" do
+      it "selects the first matching template" do
         # Run the command
-        run_command "pull_request_templates pr-url"
+        run_command_and_stop "pull_request_templates pr-url"
 
-        # Check it has a non-zero exit status
-        expect(last_command_started).to have_exit_status(1)
+        # Verify it outputs a valid GitHub PR URL with the first matching template
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=feature.md}
+        )
 
-        # Verify it cannot chose a single template and provides guidance
-        expect(last_command_started).to have_output(<<~EXPECTED.chomp)
-          Unable to pick one template from ["bug_fix.md", "feature.md"] for the changes to 3 files:
-          * app.rb
-          * docs.md
-          * test.txt
-
-          To resolve this, add a fallback template to your config.yml:
-          - file: default.md
-            pattern: "**/*"
-            fallback: true
-        EXPECTED
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
       end
     end
 
@@ -585,24 +565,17 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add config and data'"
       end
 
-      it "outputs a message about no matching templates and exits with error" do
+      it "generates URL without template parameter" do
         # Run the command
-        run_command "pull_request_templates pr-url"
+        run_command_and_stop "pull_request_templates pr-url"
 
-        # Check it has a non-zero exit status
-        expect(last_command_started).to have_exit_status(1)
+        # Verify it outputs a valid GitHub PR URL without template parameter
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1}
+        )
 
-        # Verify it cannot find a matching template and provides guidance
-        expect(last_command_started).to have_output(<<~EXPECTED.chomp)
-          Unable to pick one template from ["bug_fix.md", "feature.md"] for the changes to 2 files:
-          * config.json
-          * data.txt
-
-          To resolve this, add a fallback template to your config.yml:
-          - file: default.md
-            pattern: "**/*"
-            fallback: true
-        EXPECTED
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
       end
     end
   end
