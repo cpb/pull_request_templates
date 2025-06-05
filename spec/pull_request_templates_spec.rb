@@ -44,7 +44,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       include_context "git repository setup"
       include_context "initial commit"
 
-      it "outputs a message about no templates and exits successfully" do
+      it "outputs a message about no templates and exits with error" do
         # Run the command
         run_command "pull_request_templates pr-url"
 
@@ -302,7 +302,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "with ambiguous templates (configuration without fallback)" do
+    context "with ambiguous templates" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -408,7 +408,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
-    context "with fallback template and dot files" do
+    context "with catch-all pattern and dot files" do
       include_context "git repository setup"
       include_context "git remote setup"
       include_context "initial commit"
@@ -421,12 +421,18 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           Default template content
         MD
 
-        # Add config file with fallback template
+        write_file ".github/PULL_REQUEST_TEMPLATE/other.md", <<~MD
+          # Other Template
+          Other template content
+        MD
+
+        # Add config file with catch-all template
         write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
           templates:
+            - file: other.md
+              pattern: "**/*.dat"
             - file: default.md
               pattern: "**/*"
-              fallback: true
         YML
 
         # Add files to git
@@ -445,7 +451,7 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         run_command_and_stop "git commit -m 'Add templates and files'"
       end
 
-      it "handles dot files and nested paths with fallback template" do
+      it "matches dot files and nested paths" do
         # Run the command
         run_command_and_stop "pull_request_templates pr-url"
 
