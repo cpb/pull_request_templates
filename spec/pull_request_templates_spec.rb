@@ -297,6 +297,11 @@ RSpec.describe PullRequestTemplates, type: :aruba do
           %r{https://github.com/user/repo/compare/bug-fix-branch\?expand=1&quick_pull=1}
         )
 
+        # Verify stderr message about multiple templates
+        expect(last_command_started).to have_output_on_stderr(
+          "Multiple templates found but no config.yml to select between them. Add a config.yml file to specify which template to use for which files."
+        )
+
         # Check it has a successful exit status
         expect(last_command_started).to have_exit_status(0)
       end
@@ -513,6 +518,11 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Verify it outputs a valid GitHub PR URL without template parameter
         expect(last_command_started).to have_output(
           %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1}
+        )
+
+        # Verify stderr message about no matching templates
+        expect(last_command_started).to have_output_on_stderr(
+          "No template matches the changed files. Add a catch-all pattern (e.g. '**/*') to your config.yml to always use a template."
         )
 
         # Check it has a successful exit status

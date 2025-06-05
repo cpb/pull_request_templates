@@ -64,7 +64,14 @@ module PullRequestTemplates
             end
           end
         end
+        # No matching template found
+        say_error "No template matches the changed files. Add a catch-all pattern (e.g. '**/*') to your config.yml to always use a template."
+        nil
       else
+        # Multiple templates but no config
+        if template_files.length > 1
+          say_error "Multiple templates found but no config.yml to select between them. Add a config.yml file to specify which template to use for which files."
+        end
         template_files.first
       end
     end
