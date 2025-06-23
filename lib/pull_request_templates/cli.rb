@@ -1,6 +1,7 @@
 require "thor"
 require "yaml"
 require "pathname"
+require "tempfile"
 
 module PullRequestTemplates
   class Cli < Thor
@@ -42,7 +43,43 @@ module PullRequestTemplates
 
     def get_available_templates
       template_dir = ".github/PULL_REQUEST_TEMPLATE"
-      Dir.glob("#{template_dir}/*.md").map { |path| File.basename(path) }
+      mapping_file = "#{template_dir}/config.yml"
+      
+      templates = []
+      
+      # Add file-based templates
+      Dir.glob("#{template_dir}/*.md").each do |path|
+        templates << { type: :file, name: File.basename(path), path: path }
+      end
+      
+      # Add inline templates from config.yml
+      if File.exist?(mapping_file)
+        config = YAML.load_file(mapping_file)
+        config_templates = config.fetch("templates", [])
+        
+        config_templates.each do |template_config|
+          if template_config.key?("name") && template_config.key?("body")
+            # Generate a filename from the name for inline templates
+            filename = template_config["name"].downcase.gsub(/\s+/, "_") + ".md"
+            templates << { 
+              type: :inline, 
+              name: filename, 
+              config: template_config,
+              pattern: template_config["pattern"]
+            }
+          elsif template_config.key?("file")
+            # This is a file-based template reference
+            templates << { 
+              type: :file, 
+              name: template_config["file"], 
+              path: "#{template_dir}/#{template_config['file']}",
+              pattern: template_config["pattern"]
+            }
+          end
+        end
+      end
+      
+      templates
     end
 
     def get_changes
@@ -52,28 +89,55 @@ module PullRequestTemplates
       changes.split("\n").reject(&:empty?)
     end
 
-    def select_template(template_files, changes)
-      mapping_file = ".github/PULL_REQUEST_TEMPLATE/config.yml"
-      if File.exist?(mapping_file)
-        templates = YAML.load_file(mapping_file).fetch("templates")
-        templates.each do |template|
+    def select_template(templates, changes)
+      # First, try to find templates with patterns that match the changes
+      templates_with_patterns = templates.select { |t| t[:pattern] }
+      
+      if templates_with_patterns.any?
+        templates_with_patterns.each do |template|
           changes.each do |file|
-            patterns = template.fetch("pattern")
-            Array(patterns).each do |pattern|
-              return template.fetch("file") if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB | File::Constants::FNM_DOTMATCH)
+            patterns = Array(template[:pattern])
+            patterns.each do |pattern|
+              if File.fnmatch(pattern, file, File::FNM_PATHNAME | File::FNM_EXTGLOB | File::Constants::FNM_DOTMATCH)
+                return get_template_filename(template)
+              end
             end
           end
         end
+        
         # No matching template found
         say_error "No template matches the changed files. Add a catch-all pattern (e.g. '**/*') to your config.yml to always use a template."
-        nil
+        return nil
       else
-        # Multiple templates but no config
-        if template_files.length > 1
+        # No config.yml or no patterns defined
+        if templates.length > 1
           say_error "Multiple templates found but no config.yml to select between them. Add a config.yml file to specify which template to use for which files."
         end
-        template_files.first
+        get_template_filename(templates.first)
       end
+    end
+
+    def get_template_filename(template)
+      case template[:type]
+      when :file
+        template[:name]
+      when :inline
+        # For inline templates, we need to create a temporary file
+        create_inline_template_file(template)
+      end
+    end
+
+    def create_inline_template_file(template)
+      # Create a temporary file for the inline template
+      temp_file = Tempfile.new([template[:name], '.md'])
+      temp_file.write(template[:config]["body"])
+      temp_file.close
+      
+      # Store the temp file path so it can be cleaned up later
+      @temp_files ||= []
+      @temp_files << temp_file.path
+      
+      template[:name]
     end
 
     def generate_pr_url(branch, template)

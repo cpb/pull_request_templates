@@ -240,6 +240,138 @@ RSpec.describe PullRequestTemplates, type: :aruba do
       end
     end
 
+    context "with inline templates" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
+      before do
+        # Add a config file with inline templates
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
+          templates:
+            - name: "Bug Fix"
+              pattern: "**/fix*.txt"
+              body: |
+                # Bug Fix
+
+                ## Description
+                Describe the bug you're fixing
+
+                ## Steps to Reproduce
+                Steps to reproduce the behavior
+
+                ## Checklist
+                - [ ] Bug is reproducible
+                - [ ] Steps to reproduce are clear
+                - [ ] Fix has been tested
+            - name: "Feature Request"
+              pattern: "**/feature*.txt"
+              body: |
+                # Feature Request
+
+                ## Description
+                Describe the feature you're adding
+
+                ## Motivation
+                Why is this feature needed?
+
+                ## Checklist
+                - [ ] Tests added
+                - [ ] Documentation updated
+                - [ ] Feature has been tested
+        YML
+
+        # Add files to git
+        run_command_and_stop "git add .github"
+        run_command_and_stop "git commit -m 'Add inline PR templates'"
+
+        # Create a feature branch with changes
+        run_command_and_stop "git checkout -b feature-branch"
+
+        # Match a feature contribution
+        write_file "feature.txt", "This is a feature contribution"
+        run_command_and_stop "git add feature.txt"
+        run_command_and_stop "git commit -m 'Add feature'"
+      end
+
+      it "selects template based on file patterns using inline templates" do
+        # Run the command
+        run_command_and_stop "pull_request_templates pr-url"
+
+        # Verify it outputs a valid GitHub PR URL with template parameter
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=feature_request}
+        )
+
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
+      end
+    end
+
+    context "with mixed inline and file-based templates" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
+      before do
+        # Add a file-based template
+        write_file ".github/PULL_REQUEST_TEMPLATE/bug_fix.md", <<~MD
+          # Bug Fix
+
+          ## Description
+          Describe the bug you're fixing
+
+          ## Steps to Reproduce
+          Steps to reproduce the behavior
+        MD
+
+        # Add a config file with mixed templates
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
+          templates:
+            - file: bug_fix.md
+              pattern: "**/fix*.txt"
+            - name: "Feature Request"
+              pattern: "**/feature*.txt"
+              body: |
+                # Feature Request
+
+                ## Motivation
+                Why is this feature needed?
+
+                ## Checklist
+                - [ ] Tests added
+                - [ ] Documentation updated
+        YML
+
+        # Add files to git
+        run_command_and_stop "git add .github"
+        run_command_and_stop "git commit -m 'Add mixed PR templates'"
+
+        # Create a feature branch with changes
+        run_command_and_stop "git checkout -b feature-branch"
+
+        # Match a feature contribution
+        write_file "feature.txt", "This is a feature contribution"
+        run_command_and_stop "git add feature.txt"
+        run_command_and_stop "git commit -m 'Add feature'"
+      end
+
+      it "selects inline template when it matches file patterns" do
+        # Run the command
+        run_command_and_stop "pull_request_templates pr-url"
+
+        # Verify it outputs a valid GitHub PR URL with template parameter
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=feature_request}
+        )
+
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
+      end
+    end
+
     context "with ambiguous templates (no configuration)" do
       include_context "git repository setup"
       include_context "git remote setup"
@@ -523,6 +655,101 @@ RSpec.describe PullRequestTemplates, type: :aruba do
         # Verify stderr message about no matching templates
         expect(last_command_started).to have_output_on_stderr(
           "No template matches the changed files. Add a catch-all pattern (e.g. '**/*') to your config.yml to always use a template."
+        )
+
+        # Check it has a successful exit status
+        expect(last_command_started).to have_exit_status(0)
+      end
+    end
+
+    context "with GitHub-style form structure" do
+      include_context "git repository setup"
+      include_context "git remote setup"
+      include_context "initial commit"
+      include_context "template directory"
+
+      before do
+        # Add a config file with GitHub-style form structure
+        write_file ".github/PULL_REQUEST_TEMPLATE/config.yml", <<~YML
+          templates:
+            - name: "Bug Report"
+              pattern: "**/fix*.txt"
+              body: |
+                # Bug Report
+
+                ## Description
+                A clear and concise description of what the bug is.
+
+                ## Steps to Reproduce
+                1. Go to '...'
+                2. Click on '....'
+                3. Scroll down to '....'
+                4. See error
+
+                ## Expected Behavior
+                A clear and concise description of what you expected to happen.
+
+                ## Actual Behavior
+                A clear and concise description of what actually happened.
+
+                ## Environment
+                - OS: [e.g. macOS, Windows, Linux]
+                - Browser: [e.g. Chrome, Safari, Firefox]
+                - Version: [e.g. 22]
+
+                ## Additional Context
+                Add any other context about the problem here.
+
+                ## Checklist
+                - [ ] I have searched for existing issues
+                - [ ] I have provided all the requested information
+                - [ ] I have tested the fix
+            - name: "Feature Request"
+              pattern: "**/feature*.txt"
+              body: |
+                # Feature Request
+
+                ## Problem Statement
+                A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+                ## Proposed Solution
+                A clear and concise description of what you want to happen.
+
+                ## Alternative Solutions
+                A clear and concise description of any alternative solutions or features you've considered.
+
+                ## Additional Context
+                Add any other context or screenshots about the feature request here.
+
+                ## Implementation Notes
+                Any notes about how this might be implemented.
+
+                ## Checklist
+                - [ ] I have searched for existing feature requests
+                - [ ] I have provided a clear problem statement
+                - [ ] I have outlined a proposed solution
+        YML
+
+        # Add files to git
+        run_command_and_stop "git add .github"
+        run_command_and_stop "git commit -m 'Add GitHub-style form templates'"
+
+        # Create a feature branch with changes
+        run_command_and_stop "git checkout -b feature-branch"
+
+        # Match a feature contribution
+        write_file "feature.txt", "This is a feature contribution"
+        run_command_and_stop "git add feature.txt"
+        run_command_and_stop "git commit -m 'Add feature'"
+      end
+
+      it "selects template based on file patterns using GitHub-style form structure" do
+        # Run the command
+        run_command_and_stop "pull_request_templates pr-url"
+
+        # Verify it outputs a valid GitHub PR URL with template parameter
+        expect(last_command_started).to have_output(
+          %r{https://github.com/user/repo/compare/feature-branch\?expand=1&quick_pull=1&template=feature_request}
         )
 
         # Check it has a successful exit status
