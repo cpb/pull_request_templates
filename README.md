@@ -1,14 +1,14 @@
 # PullRequestTemplates
 
-A tool that reduces PR description toil and provides the right context for changes.
+`pull_request_templates` keeps you in flow by eliminating the toil in providing the right context for changes in pull request descriptions.
 
 PullRequestTemplates helps teams by:
-- Matching code changes to the right template automatically
-- Generating template-specific GitHub URLs for new PRs
-- Installing git hooks to override default PR URL generation
-- Validating that templates have clear, non-overlapping file patterns
-- Checking PRs use the correct template based on changed files
-- Suggesting better template options when needed
+- [x] Matching code changes to the right template automatically
+- [x] Generating template-specific GitHub URLs for new PRs
+- [ ] Installing git hooks to override default PR URL generation
+- [ ] Validating that templates have clear, non-overlapping file patterns
+- [ ] Checking PRs use the correct template based on changed files
+- [ ] Suggesting better template options when needed
 
 Works seamlessly both in local development and GitHub Actions workflows.
 
@@ -28,24 +28,22 @@ gem install pull_request_templates
 
 ## Configuration
 
-To support multiple templates and automatically select the right one based on changed files, add a `.mapping.yml` file to your template directory:
+To support multiple templates and automatically select the right one based on changed files, add a `config.yml` file to your template directory:
 
 ```yaml
-# .github/PULL_REQUEST_TEMPLATE/.mapping.yml
-feature.md:
-  - "**/feature*.txt"
-bug_fix.md:
-  - "**/fix*.txt"
+# .github/PULL_REQUEST_TEMPLATE/config.yml
+templates:
+  - file: feature.md
+    pattern: "**/feature*.txt"
+  - file: bug_fix.md
+    pattern: "**/fix*.txt"
 ```
 
-- Each key is a template filename.
-- Each value is a list of glob patterns (quoted for YAML compatibility).
-- The tool will select the template whose patterns match all changed files (MECE logic).
-- If more than one template matches, you'll get an error listing the ambiguous templates and files.
+- `pull_request_templates` will select the first template whose patterns match any changed files.
 
 ## Usage
 
-> **Note:** This is pre-release software. Currently, it only works with a single template in the pull request template directory.
+> **Note:** This is pre-release software. `config.yml` format expected to change frequently
 
 ### Setting Up Templates
 
@@ -56,20 +54,19 @@ Place your PR templates in the `.github/PULL_REQUEST_TEMPLATE/` directory. For e
 └── PULL_REQUEST_TEMPLATE/
     ├── feature.md
     ├── bug_fix.md
-    └── .mapping.yml
+    └── config.yml
 ```
 
-The `.mapping.yml` file should define which templates apply to which files:
+The `config.yml` file should define which templates apply to which files:
 
 ```yaml
-# .github/PULL_REQUEST_TEMPLATE/.mapping.yml
-feature.md:
-  - "**/feature*.txt"
-bug_fix.md:
-  - "**/fix*.txt"
+# .github/PULL_REQUEST_TEMPLATE/config.yml
+templates:
+  - file: feature.md
+    pattern: "**/feature*.txt"
+  - file: bug_fix.md
+    pattern: "**/fix*.txt"
 ```
-
-This setup allows the tool to automatically select the appropriate template based on your changes.
 
 ### Creating a Pull Request
 
