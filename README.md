@@ -5,6 +5,7 @@
 PullRequestTemplates helps teams by:
 - [x] Matching code changes to the right template automatically
 - [x] Generating template-specific GitHub URLs for new PRs
+- [x] Supporting both file-based and inline templates
 - [ ] Installing git hooks to override default PR URL generation
 - [ ] Validating that templates have clear, non-overlapping file patterns
 - [ ] Checking PRs use the correct template based on changed files
@@ -28,7 +29,11 @@ gem install pull_request_templates
 
 ## Configuration
 
-To support multiple templates and automatically select the right one based on changed files, add a `config.yml` file to your template directory:
+To support multiple templates and automatically select the right one based on changed files, add a `config.yml` file to your template directory. You can use either file-based templates or inline templates (or both).
+
+### File-based Templates
+
+Reference existing `.md` files in your template directory:
 
 ```yaml
 # .github/PULL_REQUEST_TEMPLATE/config.yml
@@ -39,7 +44,64 @@ templates:
     pattern: "**/fix*.txt"
 ```
 
+### Inline Templates
+
+Define templates directly in the config file:
+
+```yaml
+# .github/PULL_REQUEST_TEMPLATE/config.yml
+templates:
+  - name: "Feature Request"
+    pattern: "**/feature*.txt"
+    body: |
+      # Feature Request
+
+      ## Description
+      Describe the feature you're adding
+
+      ## Motivation
+      Why is this feature needed?
+
+      ## Checklist
+      - [ ] Tests added
+      - [ ] Documentation updated
+      - [ ] Feature has been tested
+  - name: "Bug Fix"
+    pattern: "**/fix*.txt"
+    body: |
+      # Bug Fix
+
+      ## Description
+      Describe the bug you're fixing
+
+      ## Steps to Reproduce
+      Steps to reproduce the behavior
+
+      ## Checklist
+      - [ ] Bug is reproducible
+      - [ ] Steps to reproduce are clear
+      - [ ] Fix has been tested
+```
+
+### Mixed Configuration
+
+You can mix file-based and inline templates in the same configuration:
+
+```yaml
+# .github/PULL_REQUEST_TEMPLATE/config.yml
+templates:
+  - file: feature.md
+    pattern: "**/feature*.txt"
+  - name: "Bug Fix"
+    pattern: "**/fix*.txt"
+    body: |
+      # Bug Fix
+      ## Description
+      Describe the bug you're fixing
+```
+
 - `pull_request_templates` will select the first template whose patterns match any changed files.
+- For inline templates, the `name` field is used to generate a template filename (converted to lowercase with underscores).
 
 ## Usage
 
